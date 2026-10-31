@@ -139,10 +139,6 @@ s = re.sub(r"<title>[^<]*</title>", "<title>Lot Profiler · city prototypes</tit
 s = sub(s, "A map of every tax lot in New York City, built from the city's MapPLUTO data.",
         "A prototype of Lot Profiler for three more cities: Philadelphia, Vienna and Tokyo. Switch cities with the buttons at the top.")
 s = sub(s, " Switch the map to Zoning to see districts and ZoLa's other zoning layers.", "")
-i = s.index("\n", s.index('<p class="wellead">The buttons along the top')) + 1
-s = s[:i] + ('    <p class="wellead">Philadelphia: City of Philadelphia property and parcel records and the 2020 Census. Vienna: BEV cadastre and City of Vienna open data. '
-             'Tokyo: MLIT PLATEAU land-use parcels, buildings and zoning for the 23 wards. Transit lines: OpenStreetMap. None of the three sources has housing unit counts, '
-             'so units are left out. "Color lots by" can show each city\'s own land-use classes and zoning categories, and areas are in square feet like the NYC version.</p>\n') + s[i:]
 s = sub(s, 'placeholder="Address, BBL, neighborhood or station"', 'placeholder="Address or neighborhood"')
 s = sub(s, '<span class="hlabel">PLUTO release</span>', '<span class="hlabel">City</span>')
 s = sub(s, '<span class="ol">Subway</span>', '<span class="ol">Transit</span>')
