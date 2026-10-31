@@ -1,0 +1,50 @@
+[
+ {
+  "id": "phl26",
+  "label": "Philadelphia, October 2026",
+  "released": "2026-10",
+  "built": "2026-10-30",
+  "dir": "phl26",
+  "format": 3,
+  "lots": 547424,
+  "bytes": 88237565,
+  "core": 4868557,
+  "coverage": "Philadelphia",
+  "source": "City of Philadelphia OPA properties and PWD parcels, October 30, 2026",
+  "noUnits": true,
+  "transit": "transit_phl26_2026-10-30.json"
+ },
+ {
+  "id": "vie26",
+  "label": "Vienna, October 2026",
+  "released": "2026-10",
+  "built": "2026-10-30",
+  "dir": "vie26",
+  "format": 3,
+  "lots": 206599,
+  "bytes": 56441307,
+  "core": 2420893,
+  "coverage": "Vienna",
+  "source": "BEV cadastre (April 2026) and City of Vienna open data, October 30, 2026",
+  "noUnits": true,
+  "transit": "transit_vie26_2026-10-30.json"
+ },
+ {
+  "id": "tyo26",
+  "label": "Tokyo, October 2026",
+  "released": "2026-10",
+  "built": "2026-10-30",
+  "dir": "tyo26",
+  "format": 3,
+  "lots": 790746,
+  "bytes": 198138944,
+  "core": 9852090,
+  "coverage": "Tokyo 23 wards",
+  "source": "MLIT PLATEAU 2020 land use and zoning, 2023 buildings (Flateau), October 30, 2026",
+  "noUnits": true,
+  "transit": "transit_tyo26_2026-10-30.json",
+  "parts": {
+   "lots.pmtiles": 2
+  }
+ }
+]

@@ -1,0 +1,22 @@
+{
+ "snapshots": [
+  {
+   "file": "transit_phl26_2026-10-30.json",
+   "date": "2026-10-30",
+   "built": "2026-10-30",
+   "bytes": 2168623
+  },
+  {
+   "file": "transit_vie26_2026-10-30.json",
+   "date": "2026-10-30",
+   "built": "2026-10-30",
+   "bytes": 4719450
+  },
+  {
+   "file": "transit_tyo26_2026-10-30.json",
+   "date": "2026-10-30",
+   "built": "2026-10-30",
+   "bytes": 5064632
+  }
+ ]
+}
