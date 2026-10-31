@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lot Profiler</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
+<script src="https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#panel">Skip to the profile</a>
+<header id="top">
+  <div class="brand"><b>Lot Profiler</b><span>Tax lots, zoning and land use for New York City</span></div>
+  <div class="search">
+    <input id="q" type="search" placeholder="Address, BBL, neighborhood or station" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="qres" aria-expanded="false" aria-label="Search by address, BBL, borough-block-lot, neighborhood, census tract or station">
+    <ul id="qres" role="listbox"></ul>
+  </div>
+  <nav id="history" aria-label="PLUTO releases">
+    <span class="hlabel">PLUTO release</span>
+    <ol id="track"></ol>
+    <label class="compare">Compare with
+      <select id="cmp"><option value="">nothing</option></select>
+    </label>
+  </nav>
+  <div class="hlinks">
+    <a href="coming_soon.html" target="_blank" rel="noopener" class="aboutl">Coming soon</a>
+    <a href="about.html" target="_blank" rel="noopener" class="aboutl">About &amp; methods</a>
+    <button id="guideBtn" class="qbtn" aria-controls="guide" aria-expanded="false" title="Quick guide">?</button>
+  </div>
+</header>
+
+<main id="wrap">
+  <section id="mapbox">
+    <div id="map"></div>
+    <div id="tools" role="toolbar" aria-label="Selection tools">
+      <button data-mode="view" class="on ptr" title="View a lot's information without changing your selections (V)" aria-label="View lot information"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 1.5v11.2l3-2.9 2 4.7 2.1-.9-2-4.6h4.2z" fill="currentColor" stroke="currentColor" stroke-width=".6" stroke-linejoin="round"/></svg></button>
+      <button data-mode="lot" title="Select a lot; shift-click to add more (L)">Lot</button>
+      <button data-mode="block" title="Select a tax block; shift-click to add more (B)">Block</button>
+      <button data-mode="area" title="Select a Neighborhood Tabulation Area (N)">NTAs</button>
+      <button data-mode="tract" title="Select a 2020 census tract (T)">Tracts</button>
+      <button data-mode="poly" title="Draw a boundary (D)">Draw</button>
+      <button data-mode="radius" title="Radius around a point, entrance or station (R)">Radius</button>
+      <button id="clipBtn" class="caret" aria-haspopup="true" aria-expanded="false" title="Lot inclusion rule for radius, walkshed and drawn selections">▾</button>
+      <button id="addBtn" class="addb" aria-pressed="false" title="Keep earlier selections so you can compare several (+). Shift-click does the same once.">＋ Add</button>
+    </div>
+    <div id="clipMenu" role="menu" hidden></div>
+    <div id="mapBtns">
+      <button id="measBtn" data-mode="measure" title="Measure a distance or an area (M)">Measure</button>
+      <button id="mapPng" title="Save the map, with its legend, as a PNG image">Save map image</button>
+      <button id="satBtn" title="Switch between map and satellite">Satellite</button>
+    </div>
+    <div id="hint" hidden></div>
+    <details id="legend" open>
+      <summary><span class="lgt">Map layers</span><span class="lgx" aria-hidden="true">‹</span></summary>
+      <div class="seg lmode" id="layerMode" role="group" aria-label="Map mode"><button data-lm="lots" class="on">Lots</button><button data-lm="zoning">Zoning</button></div>
+      <details id="lotOpts" open>
+      <summary>Lot colors</summary>
+      <label class="cb">Color lots by
+        <select id="colorBy">
+          <option value="lu">Land use</option>
+          <option value="ub">Units per building</option>
+          <option value="yb">Year built</option>
+          <option value="bf">Built FAR</option>
+          <option value="mf">Maximum FAR</option>
+          <option value="fd">Unused FAR</option>
+          <option value="fc">FAR capacity category</option>
+        </select>
+      </label>
+      <div class="lzrow" title="Zoomed out further than this, each tax block shows one value for all its lots. Lower zooms draw every lot: more to download and slower on a phone.">
+        <span>Lots appear from zoom</span><div class="seg" id="lzSeg"><button data-z="12">12</button><button data-z="13">13</button><button data-z="14">14</button></div>
+        <small id="zNow"></small>
+      </div>
+      <label class="rrow aggrow">Blocks show <select id="blockAgg"></select></label>
+      <div id="swatches"></div>
+      <div id="rangeBox" hidden>
+        <div class="rrow"><label>From <input id="rMin" type="number" step="0.1"></label><label>to <input id="rMax" type="number" step="0.1"></label><button id="rAuto" class="mini">Reset</button></div>
+      </div>
+      </details>
+      <details id="zonOpts">
+        <summary>Zoning map</summary>
+        <div class="checks one sw">
+          <label><input type="checkbox" data-zon="zd"> <i class="zk zd"></i>Zoning districts</label>
+          <label><input type="checkbox" data-zon="co"> <i class="zk co"></i>Commercial overlays</label>
+          <label><input type="checkbox" data-zon="sp"> <i class="zk sp"></i>Special purpose districts</label>
+          <label><input type="checkbox" data-zon="ss"> <i class="zk ss"></i>Special district subdistricts</label>
+          <label><input type="checkbox" data-zon="lh"> <i class="zk lh"></i>Limited height districts</label>
+          <label><input type="checkbox" data-zon="labels" checked> Labels</label>
+        </div>
+        <span class="ol">Supporting zoning layers</span>
+        <div class="checks one sw" id="ovlChecks"></div>
+        <p id="zonStatus" class="lstatus"></p>
+      </details>
+      <details id="mapOpts">
+        <summary>Customize map</summary>
+        <label class="rrow">Basemap <select id="basemap"><option value="map">Map</option><option value="sat">Satellite</option><option value="none">None</option></select></label>
+        <label class="slider">Lot fill <input id="opacity" type="range" min="0.1" max="1" step="0.05" value="0.85"><output id="opOut">85%</output></label>
+        <div class="checks sw">
+          <label><input type="checkbox" data-opt="lotLines" checked> Lot lines</label>
+          <label><input type="checkbox" data-opt="labels" checked> Street names</label>
+          <label><input type="checkbox" data-opt="ntas" checked> Neighborhoods</label>
+          <label><input type="checkbox" data-opt="ntaNames" checked> Neighborhood names</label>
+          <label><input type="checkbox" data-opt="tracts"> Tract lines</label>
+          <label><input type="checkbox" data-opt="dim" checked> Fade outside selection</label>
+        </div>
+        <span class="ol">Subway</span>
+        <div class="checks sw">
+          <label><input type="checkbox" data-sub="lines" checked> Lines</label>
+          <label><input type="checkbox" data-sub="stations" checked> Stations</label>
+          <label><input type="checkbox" data-sub="names"> Station names</label>
+          <label><input type="checkbox" data-sub="entrances" checked> Entrances</label>
+          <label><input type="checkbox" data-sub="platforms" checked> Platforms</label>
+          <label title="PATH and New Jersey light rail in their own colors; LIRR and Metro-North in one shared color"><input type="checkbox" data-sub="rail" checked> PATH, NJ light rail, LIRR, Metro-North</label>
+        </div>
+        <label class="rrow">Walkshed rings <select id="rings">
+          <option value="0">Off</option><option value="402.3">¼ mile</option><option value="804.7">½ mile</option><option value="1609.3">1 mile</option>
+        </select></label>
+        <p id="subStatus" class="lstatus">Subway data: loading…</p>
+      </details>
+    </details>
+    <div id="maptip" hidden></div>
+    <div id="loading">Loading lots…</div>
+  </section>
+  <div id="dragbar" title="Drag to resize"></div>
+  <aside id="panel">
+    <div id="head">
+      <button id="btnX" class="hx" hidden title="Clear the selection (Ctrl+Z to undo)" aria-label="Clear the selection">×</button>
+      <p id="back" hidden><button class="link" id="btnBack"></button></p>
+      <h1 id="areaName" tabindex="-1">Pick an area to profile</h1>
+      <p id="areaSub"></p>
+      <p id="clipRow" hidden></p>
+      <div id="selbar" hidden></div>
+      <div id="actions" hidden>
+        <button id="btnLink">Copy link</button>
+        <button id="btnSplit" hidden title="Turn this merged area back into its separate circles and areas">Split</button>
+        <button id="btnAddTo" hidden title="New circles, station walksheds and drawn areas join this merged area until you press Done">Add circles to this area</button>
+        <button id="btnClear">Clear</button>
+      </div>
+    </div>
+    <details id="opts" hidden>
+      <summary>Customize charts</summary>
+      <div class="orow">
+        <div><span class="ol">Charts</span>
+          <div class="seg" id="styleSeg"><button data-v="bars">Bars</button><button data-v="pies" class="on">Pies</button></div></div>
+        <div><span class="ol">Size</span>
+          <div class="seg" id="sizeSeg"><button data-v="s" class="on">S</button><button data-v="m">M</button><button data-v="l">L</button></div></div>
+      </div>
+      <span class="ol">Units-per-building groups</span>
+      <select id="ubPreset">
+        <option value="all">Every band separately</option>
+        <option value="1, 2, 3-4, 5+">1 · 2 · 3–4 · 5+</option>
+        <option value="1-2, 3-9, 10+">1–2 · 3–9 · 10+</option>
+        <option value="1, 2-4, 5-19, 20+">1 · 2–4 · 5–19 · 20+</option>
+        <option value="1-4, 5-49, 50+">1–4 · 5–49 · 50+</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <input id="ubCustom" type="text" placeholder="e.g. 1, 2, 3-4, 5+" spellcheck="false" hidden>
+      <div id="ubErr" hidden></div>
+      <div id="ubPills"></div>
+      <span class="ol">PLUTO data issues</span>
+      <div class="seg" id="dqSeg"><button data-v="pluto" class="on">Counted</button><button data-v="exclude">Left out</button></div>
+      <span class="ol">Boroughs counted</span>
+      <div id="boroFilter"></div>
+      <span class="ol">Land uses counted</span>
+      <div id="luFilter"></div>
+    </details>
+    <div id="profile"></div>
+  </aside>
+
+  <section id="guide" hidden aria-label="Quick guide" tabindex="-1">
+    <div class="gh"><h2>Quick guide</h2><button class="hx gx" data-gclose aria-label="Close the guide">×</button></div>
+    <ol class="gsteps">
+      <li data-gfocus="#tools"><b>Pick a tool.</b> The arrow (pointer) shows any lot's record without changing your selections. <b>Lot</b> and <b>Block</b> select tax lots and blocks; <b>NTAs</b> and <b>Tracts</b> select 2020 neighborhoods and census tracts.
+        <div class="gfig" aria-hidden="true"><span class="gt on">➤</span><span class="gt">Lot</span><span class="gt">Block</span><span class="gt">NTAs</span><span class="gt">Tracts</span></div></li>
+      <li data-gfocus="#tools [data-mode=radius]"><b>Draw, a radius, or measure.</b> <b>Draw</b> traces a boundary (click corners, then the first corner or Enter). <b>Radius</b> measures from a point, an entrance or a station; clicks snap to stations. The <b>▾</b> sets which lots count. <b>Measure</b> (bottom right of the map) gives a distance or an area (double-click or Enter to finish).
+        <div class="gfig" aria-hidden="true"><svg viewBox="0 0 120 44" width="120" height="44"><circle cx="40" cy="22" r="18" fill="rgba(27,98,165,.12)" stroke="#1B62A5" stroke-width="2"/><circle cx="40" cy="22" r="3" fill="#fff" stroke="#1B62A5" stroke-width="2"/><path d="M78 8 L112 12 L106 38 L74 32 Z" fill="rgba(27,98,165,.12)" stroke="#1B62A5" stroke-width="2"/></svg></div></li>
+      <li data-gfocus="#addBtn"><b>Compare.</b> Turn on <b>＋ Add</b> (or hold Shift) to keep earlier selections, then switch between <b>Combined</b>, <b>Side by side</b> and each selection. <b>Merge…</b> joins circles, walksheds or drawn areas into one area; <b>Split</b> separates them again.</li>
+      <li data-gfocus="#profile"><b>Read the profile.</b> Land use, housing by units per building, zoning capacity, building age and zoning districts for whatever is selected. Click a table heading to sort; click a row to leave it out of that chart (the rest recalculate). <b>Ctrl-click</b> (⌘-click on a Mac) a lot on the map to leave it out of the selection, or use <b>Leave out of selection</b> in its record. Click a section's title to fold it, or drag its ⋮⋮ to reorder. <b>Customize charts</b> switches pies and bars, groups units per building and leaves land uses out of every figure.</li>
+      <li data-gfocus="#legend"><b>Change the map.</b> The <b>Map layers</b> sidebar colors lots by land use, units, year built or FAR, with a choice of color schemes (click a legend square to pick your own color). <b>Lots appear from zoom</b> sets where lots replace tax blocks, and <b>Blocks show</b> how each block sums up its lots. <b>Lots / Zoning</b> at the top switches to ZoLa-style zoning districts and supporting zoning layers (MIH, transit zones, FRESH, E-designations…). Subway, PATH, LIRR and Metro-North are there too; the ‹ hides the sidebar.</li>
+      <li data-gfocus="#actions"><b>Share or save.</b> <b>Copy link</b> saves everything on screen in the address. <b>Save map image</b> (bottom right of the map) saves the map with its legend, and each section's <b>PNG</b> saves a chart. Ctrl+Z undoes.</li>
+    </ol>
+    <p class="gfoot">The history bar at the top switches between PLUTO releases and compares two. <a href="about.html" target="_blank" rel="noopener">About &amp; methods</a> explains every figure and lists the sources.</p>
+  </section>
+</main>
+<div id="tip" hidden></div>
+<div id="welcome" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="welH">
+  <div class="dlgbox welbox">
+    <div class="dlgh"><h2 id="welH">Lot Profiler</h2><button class="hx" data-welclose aria-label="Close">×</button></div>
+    <p class="wellead">A map of every tax lot in New York City, built from the city's MapPLUTO data. Select an area and the sidebar adds up what's there: land use, housing units, floors, building age and zoning.</p>
+    <p class="wellead">The buttons along the top of the map select a lot, a block, a neighborhood, a census tract, a radius, or a shape you draw. Switch the map to Zoning to see districts and ZoLa's other zoning layers.</p>
+    <div class="dlgact welact"><label class="welno"><input type="checkbox" id="welOff"> Don't show this again</label><button data-welguide>Quick guide</button><button class="primary" data-welclose>Close</button></div>
+  </div>
+</div>
+<div id="expDlg" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="expH">
+  <div class="dlgbox">
+    <div class="dlgh"><h2 id="expH">Save image</h2><button class="hx" data-expclose aria-label="Close">×</button></div>
+    <div class="dlgprev"><canvas id="expPrev"></canvas></div>
+    <label class="dlgrow"><span>Title</span><input id="expTitle" type="text" spellcheck="false"></label>
+    <div class="dlgrow"><span>Size</span><div class="seg" id="expSize"><button data-s="1">Screen</button><button data-s="2">2×</button><button data-s="4">Print 4×</button></div><small id="expPx"></small></div>
+    <div class="checks sw" id="expInc"><label><input type="checkbox" data-inc="legend" checked> Legend</label><label><input type="checkbox" data-inc="scalebar" checked> Scale bar</label><label><input type="checkbox" data-inc="north" checked> North arrow</label><label><input type="checkbox" data-inc="sources" checked> Sources</label></div>
+    <div class="dlgact"><button data-expclose>Cancel</button><button id="expGo" class="primary">Download PNG</button></div>
+  </div>
+</div>
+<div id="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

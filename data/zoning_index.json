@@ -1,0 +1,11 @@
+{
+ "snapshots": [
+  {
+   "file": "zoning_2026-08.pmtiles",
+   "date": "2026-08",
+   "built": "2026-10-29",
+   "source": "NYC DCP, NYC GIS Zoning Features (nycgiszoningfeatures_202608fgdb)",
+   "bytes": 4504913
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "source": "Adrian's ArcGIS model for MapPLUTO 25v4 (MaxFARUse, FARDiff, FARMapCat): straight FAR from ZR 23-142 Table 1, community facility bonus and wide/narrow streets, for the five study NTAs",
+ "columns": {
+  "far_std": {
+   "label": "Maximum usable FAR (modeled)",
+   "kind": "base"
+  }
+ }
+}
