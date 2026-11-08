@@ -25,6 +25,29 @@ VIE = [("W", "R"), ("WGV", "R"), ("WGF", "R"), ("WFB", "R"), ("WGFGV", "R"), ("G
        ("GBBG", "M"), ("IG", "M"), ("SO", "S"), ("L", "P"), ("E", "P"), ("EKLW", "P"), ("EKL", "P"), ("EPK", "P"),
        ("ESP", "P"), ("EBD", "P"), ("EBH", "P"), ("SWW", "P"), ("SWWL", "P"), ("SPK", "P"), ("F", "P"), ("VB", "T")]
 
+SFO = [("RH", "R", "Residential, house"), ("RM", "R", "Residential, mixed (apartments)"), ("RTO", "R", "Residential, transit oriented"),
+       ("RED", "R", "Residential enclave"), ("DTR", "R", "Downtown residential"), ("RC", "C", "Residential-commercial"),
+       ("NC", "C", "Neighborhood commercial"), ("NCT", "C", "Neighborhood commercial transit"), ("NCD", "C", "Named neighborhood commercial district"),
+       ("C-2", "C", "Community business"), ("C-3", "C", "Downtown commercial"), ("CHN", "C", "Chinatown"), ("RCD", "C", "Regional commercial"),
+       ("MU", "M", "Mixed use (Eastern Neighborhoods, SoMa)"), ("SALI", "M", "Service, arts, light industrial"),
+       ("PDR", "M", "Production, distribution and repair"), ("M", "M", "Industrial"), ("P", "S", "Public"),
+       ("OS", "P", "Open space (plan areas)"), ("PLAN", "T", "Redevelopment and special plan areas")]
+
+def sfo_key(z):
+    z = z.strip().upper()
+    m = re.match(r"^(RH|RM|RTO|RC|NCT|NCD|PDR|RED)(-|$)", z)
+    if m: return m.group(1)
+    if "DTR" in z: return "DTR"
+    if re.match(r"^NC-", z): return "NC"
+    if re.match(r"^C-3", z): return "C-3"
+    if z in ("CCB", "CVR", "CRNC"): return "CHN"
+    if re.match(r"^M-\d", z): return "M"
+    if z in ("MUG", "MUO", "MUR", "UMU", "WMUG", "WMUO", "CMUO", "S-MU"): return "MU"
+    if z in ("P", "JOB CORPS"): return "P"
+    if z.endswith("-OS"): return "OS"
+    if z in ("C-2", "SALI", "RCD"): return z
+    return "PLAN"
+
 def phl_key(z):
     z = re.sub(r"[-\s]+", "-", z.strip().upper())
     if z.replace("-", "") in ("SPPOA", "SPPOP"): return "SP-PO-" + z[-1]
@@ -52,6 +75,8 @@ def categories(codes, release):
     elif release.startswith("vie"):
         names = vie_names(); key = lambda z: re.sub(r"\d+$", "", z)
         spec = [(k, f, f"{k} {names.get(k, '')}".strip()) for k, f in VIE]
+    elif release.startswith("sfo"):
+        key = sfo_key; spec = [(k, f, f"{k} {n}") for k, f, n in SFO]
     elif release.startswith("tyo"):
         key = lambda z: z.split()[0]
         spec = [(k, f, None) for k, f in TYO]
