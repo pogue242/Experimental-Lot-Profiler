@@ -62,8 +62,8 @@ const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 const SATELLITE = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 const NYC_BOX = [-74.27, 40.49, -73.68, 40.92];
 const SEL_COLORS = ["#14263B","#D1495B","#1B62A5","#2A9D8F","#E08A1E","#7B4FA0","#3C8D2F","#C45BAA"];
-const CITY_SRC = {phl26:"City of Philadelphia OPA and PWD parcels",vie26:"BEV cadastre and City of Vienna open data",tyo26:"MLIT PLATEAU (Tokyo 23 wards)"};
-const CITY = {phl26:"Philadelphia",vie26:"Vienna",tyo26:"Tokyo"};
+const CITY_SRC = {phl26:"City of Philadelphia OPA and PWD parcels",vie26:"BEV cadastre and City of Vienna open data",tyo26:"MLIT PLATEAU (Tokyo 23 wards)",sfo26:"SF Planning land use and Assessor-Recorder roll",ams26:"Kadaster BAG and BRK, 3D BAG and CBS",rtm26:"Kadaster BAG and BRK, 3D BAG and CBS",hag26:"Kadaster BAG and BRK, 3D BAG and CBS",mad26:"Dirección General del Catastro (INSPIRE) and INE",bcn26:"Dirección General del Catastro (INSPIRE) and INE",vlc26:"Dirección General del Catastro (INSPIRE) and INE"};
+const CITY = {phl26:"Philadelphia",vie26:"Vienna",tyo26:"Tokyo",sfo26:"San Francisco",ams26:"Amsterdam",rtm26:"Rotterdam",hag26:"The Hague",mad26:"Madrid",bcn26:"Barcelona",vlc26:"Valencia"};
 const BORO = {0:"Philadelphia"};
 const BORO_WORD = {};
 const MTA = {A:"#0039A6",C:"#0039A6",E:"#0039A6",B:"#FF6319",D:"#FF6319",F:"#FF6319",M:"#FF6319",G:"#6CBE45",
@@ -659,7 +659,7 @@ function zoneColor(z){ const c=(st.colors.custom.zn||{})[z]; if (c) return c;
   const m=/^[A-Z]+(\d+)/.exec(z), C=SCHEMES[sc].c; if (!m) return /^PARK/.test(z)?"#A9D39E":NODATA;
   return C[Math.round(Math.min(1,(Math.min(+m[1],10)-1)/9)*(C.length-1))]; }
 function zoneBase(z){ z=z||""; const v=st.P&&st.P.id, f=z[0], pc=/(\d+)%/.exec(z), d=/(\d+)/.exec(z);
-  const k=v==="vie26"?(f==="W"?"R":f==="G"?"C":/^(B|I)/.test(z)?"M":/^(S(?!O)|E|L|P|F)/.test(z)?"P":""):/^(R|W)/.test(z)?"R":f==="C"?"C":/^(M|I)/.test(z)?"M":/^(PARK|SP-PO|SP-REC)/.test(z)?"P":"";
+  const k=v==="vie26"?(f==="W"?"R":f==="G"?"C":/^(B|I)/.test(z)?"M":/^(S(?!O)|E|L|P|F)/.test(z)?"P":""):v==="sfo26"?(/-OS$/.test(z)?"P":/^(RH|RM|RTO|RED)/.test(z)||/DTR/.test(z)?"R":/^(RC|NC|C-|CCB|CVR|CRNC|RCD)/.test(z)?"C":/^(PDR|M-|SALI|MU|UMU|WMU|CMUO|S-MU)/.test(z)?"M":""):/^(R|W)/.test(z)?"R":f==="C"?"C":/^(M|I)/.test(z)?"M":/^(PARK|SP-PO|SP-REC)/.test(z)?"P":"";
   const t=pc?Math.min(1,Math.max(0,(+pc[1]-100)/1100)):d?Math.min(1,(+d[1]-1)/(v==="vie26"?5:v==="phl26"?4:9)):0;
   if (k==="R") return mix("#F5E3A0","#B97A12",t); if (k==="C") return mix("#F0A898","#A8272B",t);
   if (k==="M") return mix("#CDB8E2","#5E3F8F",t); if (k==="P") return "#7FB36E"; return z?"#B7BEC6":NODATA; }
@@ -681,6 +681,7 @@ const nlIdx=P=>[...P.dict.nl.keys(),255];
 const zcNames=P=>[...P.dict.zc,...Array(255-P.dict.zc.length).fill(""),"No zoning"], zcColors=P=>[...P.zcat.colors,...Array(255-P.zcat.colors.length).fill(NODATA),NODATA];
 const zcIdx=P=>[...P.dict.zc.keys(),255];
 function nou(specs){
+  if (st.P&&st.P.dict.zone&&!st.P.dict.zone.some(Boolean)) delete specs.zone;
   if (!NOU()) return specs; delete specs.ub;
   const gone=new Set(["Housing units","Units per acre","Lots with housing"]);
   for (const sp of Object.values(specs)){
@@ -871,6 +872,7 @@ function lotSpecs(i){
   const bbl=Math.round(P.bbl[i]), lng=P.lng[i].toFixed(6), lat=P.lat[i].toFixed(6), zm=String(g("ZoneMap")||"").toLowerCase().replace(/^(\d)([a-z])$/,"0$1$2"), cdn=+cd||0, cou=+g("Council")||0;
   const L=(href,t)=>`<a href="${href}" target="_blank" rel="noopener">${t}</a>`, gm=`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   const groups=st.P.id==="phl26"?[["Property records",[L(`https://atlas.phila.gov/${encodeURIComponent(addrOf(P,i)||"")}`,"Atlas (City of Philadelphia)"),L("https://property.phila.gov/","Property search (OPA)")]],["Neighborhood",[L(gm,"Google Maps")]]]
+    :st.P.id==="sfo26"?[["Property records",[L(`https://sfplanninggis.org/pim/?search=${encodeURIComponent(addrOf(P,i)||"")}`,"Property Information Map (SF Planning)")]],["Neighborhood",[L(gm,"Google Maps")]]]
     :[["Neighborhood",[L(gm,"Google Maps")]]];
   const bblX=Math.round(P.bbl[i]), inSel=st.sels.some(e=>exclOf(e.sel).has(bblX)||selIdx0(P,e.sel).includes(i)), isX=st.sels.some(e=>exclOf(e.sel).has(bblX));
   const links=`<div class="lotlinks">${st.peek!=null?`<button data-selpeek>Select this lot</button>`:""}${st.peek!=null&&inSel?`<button data-exlot="${bblX}">${isX?"Count in selection":"Leave out of selection"}</button>`:""}${st.P.id==="phl26"?`<a href="https://atlas.phila.gov/${encodeURIComponent(addrOf(P,i)||"")}" target="_blank" rel="noopener">Open in Atlas</a>`:`<a href="https://www.google.com/maps/search/?api=1&query=${P.lat[i].toFixed(6)},${P.lng[i].toFixed(6)}" target="_blank" rel="noopener">Open in Google Maps</a>`}
@@ -1930,6 +1932,7 @@ function toast(msg, act, fn){ const t=$("#toast"); t.innerHTML=esc(msg)+(act?` <
 function renderTrack(){
   $("#track").innerHTML=st.releases.map(r=>`<li class="${r.id===st.P.id?"on":""} ${st.C&&r.id===st.C.id?"cmp":""}"><button data-rel="${r.id}" title="${esc(r.label)}: ${fmt(r.lots)} lots${r.coverage?` (${esc(r.coverage)})`:""}${r.released?`, released ${r.released}`:""}${r.id===st.P.id?" (showing)":""}" aria-pressed="${r.id===st.P.id}"></button><span data-rel="${r.id}">${esc(CITY[r.id]||r.id)}</span></li>`).join("")+
     "";
+  { const t=$("#track"), on=t.querySelector("li.on"); if (on&&t.scrollWidth>t.clientWidth) t.scrollLeft=on.offsetLeft-(t.clientWidth-on.offsetWidth)/2; }
   const others=st.releases.filter(r=>r.id!==st.P.id);
   $("#cmp").innerHTML=`<option value="">${others.length?"nothing":"no other release yet"}</option>`+others.map(r=>`<option value="${r.id}" ${st.C&&st.C.id===r.id?"selected":""}>${r.id}</option>`).join("");
   $("#cmp").disabled=!others.length;

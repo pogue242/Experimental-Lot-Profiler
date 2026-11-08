@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""adapt_app.py — copy 1.8's app files here and swap the New York specifics for Philadelphia, Vienna and Tokyo"""
+"""adapt_app.py — copy 1.8's app files here and swap the New York specifics for the prototype cities"""
 import os, re, shutil
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, ".."); SRC = os.path.join(ROOT, "..", "1.8")
 
@@ -8,18 +8,29 @@ def sub(s, a, b, count=1):
     if n < 1 or (count and n != count): raise SystemExit(f"expected {count or 'some'} of: {a[:70]} (found {n})")
     return s.replace(a, b)
 
+CITIES = {"phl26": ("Philadelphia", "City of Philadelphia OPA and PWD parcels"), "vie26": ("Vienna", "BEV cadastre and City of Vienna open data"),
+          "tyo26": ("Tokyo", "MLIT PLATEAU (Tokyo 23 wards)"), "sfo26": ("San Francisco", "SF Planning land use and Assessor-Recorder roll"),
+          "ams26": ("Amsterdam", "Kadaster BAG and BRK, 3D BAG and CBS"), "rtm26": ("Rotterdam", "Kadaster BAG and BRK, 3D BAG and CBS"),
+          "hag26": ("The Hague", "Kadaster BAG and BRK, 3D BAG and CBS"), "mad26": ("Madrid", "Dirección General del Catastro (INSPIRE) and INE"),
+          "bcn26": ("Barcelona", "Dirección General del Catastro (INSPIRE) and INE"), "vlc26": ("Valencia", "Dirección General del Catastro (INSPIRE) and INE")}
+NAMES = [v[0] for v in CITIES.values()]
+LIST = ", ".join(NAMES[:-1]) + " and " + NAMES[-1]
+JS_CITY = "{" + ",".join(f'{k}:"{v[0]}"' for k, v in CITIES.items()) + "}"
+JS_SRC = "{" + ",".join(f'{k}:"{v[1]}"' for k, v in CITIES.items()) + "}"
+
 for f in ("index.html", "app.js", "style.css"): shutil.copy(os.path.join(SRC, f), os.path.join(ROOT, f))
 p = os.path.join(ROOT, "app.js"); s = open(p, encoding="utf-8").read()
 s = sub(s, 'const BORO = {1:"Manhattan",2:"Bronx",3:"Brooklyn",4:"Queens",5:"Staten Island"};',
-        'const CITY = {phl26:"Philadelphia",vie26:"Vienna",tyo26:"Tokyo"};\nconst BORO = {0:"Philadelphia"};')
+        'const CITY = ' + JS_CITY + ';\nconst BORO = {0:"Philadelphia"};')
 s = sub(s, 'const BORO_WORD = {manhattan:1,mn:1,bronx:2,bx:2,brooklyn:3,bk:3,queens:4,qn:4,"staten island":5,si:5,statenisland:5};', 'const BORO_WORD = {};')
 s = sub(s, 'attribution:"NYC DCP MapPLUTO"', 'attribution:"City open data"', count=0)
 s = sub(s, "NYC DCP MapPLUTO", "${CITY_SRC[st.P.id]||\"\"}", count=0)
 s = sub(s, 'tax lots in ${(P.rel.coverage||"the release").replace(/^Five/,"five")}, MapPLUTO ${P.id}`', 'lots in ${P.rel.coverage||CITY[P.id]}`')
-s = sub(s, 'const CITY = {', 'const CITY_SRC = {phl26:"City of Philadelphia OPA and PWD parcels",vie26:"BEV cadastre and City of Vienna open data",tyo26:"MLIT PLATEAU (Tokyo 23 wards)"};\nconst CITY = {')
+s = sub(s, 'const CITY = {', 'const CITY_SRC = ' + JS_SRC + ';\nconst CITY = {')
 i = s.index('  const groups=[["Property records",'); j = s.index('  const bblX=Math.round(P.bbl[i])')
 s = s[:i] + '''  const L=(href,t)=>`<a href="${href}" target="_blank" rel="noopener">${t}</a>`, gm=`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   const groups=st.P.id==="phl26"?[["Property records",[L(`https://atlas.phila.gov/${encodeURIComponent(addrOf(P,i)||"")}`,"Atlas (City of Philadelphia)"),L("https://property.phila.gov/","Property search (OPA)")]],["Neighborhood",[L(gm,"Google Maps")]]]
+    :st.P.id==="sfo26"?[["Property records",[L(`https://sfplanninggis.org/pim/?search=${encodeURIComponent(addrOf(P,i)||"")}`,"Property Information Map (SF Planning)")]],["Neighborhood",[L(gm,"Google Maps")]]]
     :[["Neighborhood",[L(gm,"Google Maps")]]];
 ''' + s[j:]
 s = sub(s, "  const condo=lot>=7501&&lot<=7599, L=(href,t)=>`<a href=\"${href}\" target=\"_blank\" rel=\"noopener\">${t}</a>`;\n", "")
@@ -61,6 +72,7 @@ s = sub(s, "specs=cmpSpecs(cols); st.specs=specs;", "specs=nou(cmpSpecs(cols)); 
 s = sub(s, "function sectionSpecs(S){", """const nlNames=P=>[...P.dict.nl,...Array(255-P.dict.nl.length).fill(""),"Unknown"], nlColors=P=>[...P.native.colors,...Array(255-P.native.colors.length).fill(NODATA),NODATA];
 const nlIdx=P=>[...P.dict.nl.keys(),255];
 function nou(specs){
+  if (st.P&&st.P.dict.zone&&!st.P.dict.zone.some(Boolean)) delete specs.zone;
   if (!NOU()) return specs; delete specs.ub;
   const gone=new Set(["Housing units","Units per acre","Lots with housing"]);
   for (const sp of Object.values(specs)){
@@ -88,7 +100,7 @@ s = sub(s, "<span data-rel=\"${r.id}\">${r.id}${r.coverage&&!/New York City/.tes
 s = sub(s, "    `<li class=\"ghost\"><button title=\"Add the next release: python tools/build.py path/to/MapPLUTO.gdb\" aria-label=\"How to add a release\"></button><span>next</span></li>`;", "    \"\";")
 i = s.index("function zoneBase(z){"); j = s.index("\n", s.index('return "#B7BEC6"; }', i)) + 1
 s = s[:i] + '''function zoneBase(z){ z=z||""; const v=st.P&&st.P.id, f=z[0], pc=/(\\d+)%/.exec(z), d=/(\\d+)/.exec(z);
-  const k=v==="vie26"?(f==="W"?"R":f==="G"?"C":/^(B|I)/.test(z)?"M":/^(S(?!O)|E|L|P|F)/.test(z)?"P":""):/^(R|W)/.test(z)?"R":f==="C"?"C":/^(M|I)/.test(z)?"M":/^(PARK|SP-PO|SP-REC)/.test(z)?"P":"";
+  const k=v==="vie26"?(f==="W"?"R":f==="G"?"C":/^(B|I)/.test(z)?"M":/^(S(?!O)|E|L|P|F)/.test(z)?"P":""):v==="sfo26"?(/-OS$/.test(z)?"P":/^(RH|RM|RTO|RED)/.test(z)||/DTR/.test(z)?"R":/^(RC|NC|C-|CCB|CVR|CRNC|RCD)/.test(z)?"C":/^(PDR|M-|SALI|MU|UMU|WMU|CMUO|S-MU)/.test(z)?"M":""):/^(R|W)/.test(z)?"R":f==="C"?"C":/^(M|I)/.test(z)?"M":/^(PARK|SP-PO|SP-REC)/.test(z)?"P":"";
   const t=pc?Math.min(1,Math.max(0,(+pc[1]-100)/1100)):d?Math.min(1,(+d[1]-1)/(v==="vie26"?5:v==="phl26"?4:9)):0;
   if (k==="R") return mix("#F5E3A0","#B97A12",t); if (k==="C") return mix("#F0A898","#A8272B",t);
   if (k==="M") return mix("#CDB8E2","#5E3F8F",t); if (k==="P") return "#7FB36E"; return z?"#B7BEC6":NODATA; }
@@ -131,13 +143,14 @@ s = sub(s, "  return \"pmtiles://\"+url;\n}", """  const np=!EMB&&partCount(path
 }
 const PART=64*1024*1024;
 function partCount(path){ for (const r of st.releases||[]) if (r.parts&&path.startsWith(relDir(r))&&r.parts[path.slice(relDir(r).length)]) return r.parts[path.slice(relDir(r).length)]; return 0; }""")
+s = sub(s, '  const others=st.releases.filter(r=>r.id!==st.P.id);\n', '  { const t=$("#track"), on=t.querySelector("li.on"); if (on&&t.scrollWidth>t.clientWidth) t.scrollLeft=on.offsetLeft-(t.clientWidth-on.offsetWidth)/2; }\n  const others=st.releases.filter(r=>r.id!==st.P.id);\n')
 open(p, "w", encoding="utf-8").write(s)
 
 p = os.path.join(ROOT, "index.html"); s = open(p, encoding="utf-8").read()
-s = sub(s, "<span>Tax lots, zoning and land use for New York City</span>", "<span>Prototype: Philadelphia, Vienna and Tokyo</span>")
+s = sub(s, "<span>Tax lots, zoning and land use for New York City</span>", f"<span>Prototype: {LIST}</span>")
 s = re.sub(r"<title>[^<]*</title>", "<title>Lot Profiler · city prototypes</title>", s)
 s = sub(s, "A map of every tax lot in New York City, built from the city's MapPLUTO data.",
-        "A prototype of Lot Profiler for three more cities: Philadelphia, Vienna and Tokyo. Switch cities with the buttons at the top.")
+        f"A prototype of Lot Profiler for more cities: {LIST}. Switch cities with the buttons at the top.")
 s = sub(s, " Switch the map to Zoning to see districts and ZoLa's other zoning layers.", "")
 s = sub(s, 'placeholder="Address, BBL, neighborhood or station"', 'placeholder="Address or neighborhood"')
 s = sub(s, '<span class="hlabel">PLUTO release</span>', '<span class="hlabel">City</span>')
@@ -150,5 +163,6 @@ open(p, "w", encoding="utf-8").write(s)
 
 p = os.path.join(ROOT, "style.css"); s = open(p, encoding="utf-8").read()
 s += "#layerMode,#zonOpts,#boroFilter,#history .compare{display:none!important}\n"
+s += "#track li{min-width:56px;padding:0 4px}#track span{white-space:normal;max-width:74px;line-height:1.15}@media (max-width:600px){#track{flex:1;min-width:0;padding:0 2px;overflow-x:auto;scrollbar-width:none}#track::-webkit-scrollbar{display:none}#track li{min-width:62px;flex:0 0 auto}#track span{font-size:10px;letter-spacing:-.1px}}\n"
 open(p, "w", encoding="utf-8").write(s)
 print("app adapted")

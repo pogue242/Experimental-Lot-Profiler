@@ -46,5 +46,103 @@
   "parts": {
    "lots.pmtiles": 2
   }
+ },
+ {
+  "id": "sfo26",
+  "label": "San Francisco, November 2026",
+  "released": "2026-11",
+  "built": "2026-11-07",
+  "dir": "sfo26",
+  "format": 3,
+  "lots": 153765,
+  "bytes": 23976647,
+  "core": 1312409,
+  "coverage": "San Francisco",
+  "source": "SF Planning land use (August 17, 2026), Assessor-Recorder 2025 roll and zoning districts, November 7, 2026",
+  "transit": "transit_sfo26_2026-11-07.json"
+ },
+ {
+  "id": "ams26",
+  "label": "Amsterdam, November 2026",
+  "released": "2026-11",
+  "built": "2026-11-08",
+  "dir": "ams26",
+  "format": 3,
+  "lots": 136928,
+  "bytes": 31005975,
+  "core": 1504598,
+  "coverage": "Amsterdam",
+  "source": "Kadaster BRK parcels and BAG (November 2026), 3D BAG floors, CBS land use 2017 and neighbourhoods 2025, November 8, 2026",
+  "transit": "transit_ams26_2026-11-07.json"
+ },
+ {
+  "id": "rtm26",
+  "label": "Rotterdam, November 2026",
+  "released": "2026-11",
+  "built": "2026-11-08",
+  "dir": "rtm26",
+  "format": 3,
+  "lots": 133545,
+  "bytes": 30252998,
+  "core": 1728733,
+  "coverage": "Rotterdam",
+  "source": "Kadaster BRK parcels and BAG (November 2026), 3D BAG floors, CBS land use 2017 and neighbourhoods 2025, November 8, 2026",
+  "transit": "transit_rtm26_2026-11-08.json"
+ },
+ {
+  "id": "hag26",
+  "label": "The Hague, November 2026",
+  "released": "2026-11",
+  "built": "2026-11-08",
+  "dir": "hag26",
+  "format": 3,
+  "lots": 103837,
+  "bytes": 20591281,
+  "core": 1123486,
+  "coverage": "The Hague",
+  "source": "Kadaster BRK parcels and BAG (November 2026), 3D BAG floors, CBS land use 2017 and neighbourhoods 2025, November 8, 2026",
+  "transit": "transit_hag26_2026-11-08.json"
+ },
+ {
+  "id": "mad26",
+  "label": "Madrid, November 2026",
+  "released": "2026-11",
+  "built": "2026-11-08",
+  "dir": "mad26",
+  "format": 3,
+  "lots": 141244,
+  "bytes": 42277498,
+  "core": 1869201,
+  "coverage": "Madrid",
+  "source": "Dirección General del Catastro INSPIRE parcels, buildings and addresses (August 2026) and INE census sections, November 7, 2026",
+  "transit": "transit_mad26_2026-11-07.json"
+ },
+ {
+  "id": "bcn26",
+  "label": "Barcelona, November 2026",
+  "released": "2026-11",
+  "built": "2026-11-08",
+  "dir": "bcn26",
+  "format": 3,
+  "lots": 78371,
+  "bytes": 20510902,
+  "core": 1066519,
+  "coverage": "Barcelona",
+  "source": "Dirección General del Catastro INSPIRE parcels, buildings and addresses (2026) and INE census sections, November 8, 2026",
+  "transit": "transit_bcn26_2026-11-08.json"
+ },
+ {
+  "id": "vlc26",
+  "label": "Valencia, November 2026",
+  "released": "2026-11",
+  "built": "2026-11-08",
+  "dir": "vlc26",
+  "format": 3,
+  "lots": 56343,
+  "bytes": 15771408,
+  "core": 771470,
+  "coverage": "Valencia",
+  "source": "Dirección General del Catastro INSPIRE parcels, buildings and addresses (2026) and INE census sections, November 8, 2026",
+  "transit": "transit_vlc26_2026-11-08.json"
  }
 ]

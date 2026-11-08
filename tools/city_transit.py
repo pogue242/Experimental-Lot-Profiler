@@ -7,7 +7,14 @@ DATA = os.path.join(HERE, "..", "data")
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://overpass.private.coffee/api/interpreter"]
 CITIES = {"phl26": ("Philadelphia", [-75.2803, 39.8670, -74.9557, 40.1379]),
           "vie26": ("Vienna", [16.1800, 48.1100, 16.5800, 48.3300]),
-          "tyo26": ("Tokyo", [139.5600, 35.5200, 139.9200, 35.8200])}
+          "tyo26": ("Tokyo", [139.5600, 35.5200, 139.9200, 35.8200]),
+          "sfo26": ("San Francisco", [-122.5200, 37.7000, -122.3500, 37.8350]),
+          "ams26": ("Amsterdam", [4.7200, 52.2700, 5.0800, 52.4350]),
+          "mad26": ("Madrid", [-3.8900, 40.3100, -3.5200, 40.6450]),
+          "bcn26": ("Barcelona", [2.0500, 41.3100, 2.2300, 41.4700]),
+          "vlc26": ("Valencia", [-0.4400, 39.4000, -0.3000, 39.5200]),
+          "rtm26": ("Rotterdam", [4.3500, 51.8500, 4.6000, 51.9900]),
+          "hag26": ("The Hague", [4.1800, 52.0100, 4.4100, 52.1300])}
 MODE = {"subway": "subway", "light_rail": "lightrail", "tram": "lightrail", "train": "path"}
 DEFAULT = {"subway": "#1F5FA6", "lightrail": "#2E9E5B", "path": "#6B5B95"}
 
